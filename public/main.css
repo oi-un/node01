@@ -3,6 +3,10 @@
   padding: 0;
   box-sizing: border-box;
 }
+a {
+  text-decoration: none;
+  color: inherit;
+}
 body {
   margin: 0;
 }
@@ -50,4 +54,9 @@ div {
   border: none;
   background: lightgrey;
   border-radius: 5px;
+}
+.detail-bg {
+  background: white;
+  padding: 15px;
+  margin-top: 10px;
 }
