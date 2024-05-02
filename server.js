@@ -16,6 +16,18 @@ app.set('view engine', 'ejs');
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 
+// session 방식 로그인
+const session = require('express-session');
+const passport = require('passport');
+const LocalStrategy = require('passport-local');
+app.use(passport.initialize());
+app.use(session({
+  secret: '암호화에 쓸 비번',
+  resave : false,
+  saveUninitialized : false
+}));
+app.use(passport.session()) 
+
 
 let db;
 let id = 'cyj15945';
@@ -145,3 +157,45 @@ app.get('/list/:id', async (요청, 응답)=>{
   console.log(res[0].title);
   응답.render('list.ejs', { posts: res });
 });
+
+app.get('/signup', (요청, 응답) => {
+  응답.render('signup.ejs');
+})
+app.post('/signup', async (요청, 응답) => {
+  let username = 요청.body.username;
+  let password = 요청.body.password;
+  if(userId == '' || userPw == ''){
+    응답.send('아이디 비번 제대로 입력해라')
+  } else{
+    let result = await db.collection('user')
+      .insertOne({username: username, password: password});
+    console.log(result);
+    응답.redirect('/list')
+  }
+})
+
+passport.use(new LocalStrategy(async (입력한아이디, 입력한비번, cb) => {
+  let result = await db.collection('user').findOne({ username : 입력한아이디})
+  if (!result) {
+    return cb(null, false, { message: '아이디 DB에 없음' })
+  }
+  if (result.password == 입력한비번) {
+    return cb(null, result)
+  } else {
+    return cb(null, false, { message: '비번불일치' });
+  }
+}))
+
+app.get('/login', (요청, 응답, next)=>{
+  응답.render('login.ejs');
+})
+app.post('/login', (요청, 응답, next)=>{
+  passport.authenticate('local', (error, user, info) => {
+    if (error) return 응답.status(500).json(error)
+    if (!user) return 응답.status(401).json(info.message)
+    요청.logIn(user, (err) => {
+      if (err) return next(err)
+      응답.redirect('/')
+    })
+})(요청, 응답, next)
+})
