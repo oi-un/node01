@@ -137,3 +137,11 @@ app.delete('/delete', async (요청, 응답)=>{
   await db.collection('post').deleteOne({_id: new ObjectId(id)})
   응답.send('삭제완료');
 })
+
+app.get('/list/:id', async (요청, 응답)=>{
+  let page = 요청.params.id;
+  let skip = (page-1)*5;
+  let res = await db.collection('post').find().skip(skip).limit(5).toArray();
+  console.log(res[0].title);
+  응답.render('list.ejs', { posts: res });
+});
